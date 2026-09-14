@@ -1,0 +1,30 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+.python-version
+
+# Environment / secrets
+.env
+BTP_env_var.py
+secrets.json
+*.pem
+*.key
+*.credential
+
+# Local data / DB / indexes
+data/vector_store/*.faiss
+data/vector_store/index.meta.json
+*.sqlite
+*.db
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+
+# Node
+node_modules/
+
+# Logs
+*.log

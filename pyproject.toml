@@ -1,0 +1,9 @@
+[project]
+name = "mira-poc"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "generative-ai-hub-sdk>=4.12.4",
+]

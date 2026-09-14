@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MIRA - Maintenance Intelligence & Resolution Assistant</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; min-height: 100vh; }
+        .container { max-width: 900px; margin: 0 auto; padding: 20px; }
+        header { background: #1a3c5e; color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
+        header h1 { font-size: 1.5rem; font-weight: 600; }
+        header p { opacity: 0.8; font-size: 0.9rem; margin-top: 4px; }
+        .card { background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 16px; overflow: hidden; }
+        .card-header { padding: 16px; border-bottom: 1px solid #eee; background: #fafafa; }
+        .card-header h3 { font-size: 1rem; font-weight: 600; color: #333; }
+        .card-body { padding: 16px; }
+        .form-group { margin-bottom: 16px; }
+        label { display: block; font-size: 0.85rem; font-weight: 500; color: #555; margin-bottom: 6px; }
+        input[type="text"], textarea, select { width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 6px; font-size: 0.95rem; font-family: inherit; transition: border-color 0.2s; }
+        input[type="text"]:focus, textarea:focus, select:focus { outline: none; border-color: #1a3c5e; box-shadow: 0 0 0 3px rgba(26,60,94,0.1); }
+        textarea { min-height: 100px; resize: vertical; }
+        .row { display: flex; gap: 16px; }
+        .row .form-group { flex: 1; }
+        .checkbox-group { display: flex; align-items: center; gap: 8px; }
+        .checkbox-group input[type="checkbox"] { width: 18px; height: 18px; accent-color: #1a3c5e; }
+        .checkbox-group label { margin: 0; font-weight: 400; font-size: 0.9rem; cursor: pointer; }
+        button { padding: 12px 24px; background: #1a3c5e; color: white; border: none; border-radius: 6px; font-size: 0.95rem; font-weight: 500; cursor: pointer; transition: background 0.2s; }
+        button:hover { background: #15304a; }
+        button:disabled { background: #99b3cc; cursor: not-allowed; }
+        .btn-secondary { background: #6c757d; }
+        .btn-secondary:hover { background: #5a6268; }
+        .btn-success { background: #28a745; }
+        .btn-success:hover { background: #218838; }
+        .btn-danger { background: #dc3545; }
+        .btn-danger:hover { background: #c82333; }
+        .btn-warning { background: #ffc107; color: #333; }
+        .btn-warning:hover { background: #e0a800; }
+        .actions { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
+        .suggestion { border: 1px solid #e0e0e0; border-radius: 6px; padding: 16px; margin-bottom: 12px; transition: box-shadow 0.2s; }
+        .suggestion:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .suggestion-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; flex-wrap: wrap; gap: 8px; }
+        .suggestion-rank { background: #1a3c5e; color: white; padding: 4px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; }
+        .suggestion-confidence { padding: 4px 10px; border-radius: 4px; font-size: 0.75rem; font-weight: 600; text-transform: uppercase; }
+        .confidence-HIGH { background: #d4edda; color: #155724; }
+        .confidence-MEDIUM { background: #fff3cd; color: #856404; }
+        .confidence-LOW { background: #f8d7da; color: #721c24; }
+        .suggestion-meta { display: flex; gap: 16px; font-size: 0.8rem; color: #666; margin-bottom: 12px; flex-wrap: wrap; }
+        .suggestion-meta span { background: #f5f5f5; padding: 2px 8px; border-radius: 4px; }
+        .suggestion-text { margin-bottom: 8px; }
+        .suggestion-text strong { color: #333; }
+        .suggestion-text span { color: #555; line-height: 1.5; }
+        .synthesis-box { background: #e8f4fd; border: 1px solid #b8daff; border-radius: 6px; padding: 16px; margin-bottom: 20px; }
+        .synthesis-box h4 { color: #1a3c5e; font-size: 0.9rem; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+        .synthesis-box p { color: #333; line-height: 1.6; font-size: 0.95rem; }
+        .loading { display: none; text-align: center; padding: 40px; color: #666; }
+        .loading.visible { display: block; }
+        .spinner { display: inline-block; width: 24px; height: 24px; border: 3px solid #ddd; border-top-color: #1a3c5e; border-radius: 50%; animation: spin 1s linear infinite; margin-right: 12px; vertical-align: middle; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .error { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; padding: 12px; border-radius: 6px; margin-bottom: 16px; display: none; }
+        .error.visible { display: block; }
+        .hidden { display: none !important; }
+        .toast { position: fixed; bottom: 20px; right: 20px; padding: 12px 20px; border-radius: 6px; color: white; font-size: 0.9rem; box-shadow: 0 2px 10px rgba(0,0,0,0.2); z-index: 1000; opacity: 0; transform: translateY(20px); transition: all 0.3s; }
+        .toast.visible { opacity: 1; transform: translateY(0); }
+        .toast-success { background: #28a745; }
+        .toast-error { background: #dc3545; }
+        .suggestion-content { display: none; }
+        .suggestion-content.visible { display: block; }
+        .toggle-btn { background: none; border: none; color: #1a3c5e; font-size: 0.85rem; padding: 4px 0; cursor: pointer; font-weight: 500; }
+        .toggle-btn:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>MIRA</h1>
+            <p>Maintenance Intelligence & Resolution Assistant</p>
+        </header>
+
+        <div id="error" class="error"></div>
+
+        <div class="card">
+            <div class="card-header"><h3>Report Issue</h3></div>
+            <div class="card-body">
+                <form id="issueForm">
+                    <div class="form-group">
+                        <label for="issueText">Issue Description *</label>
+                        <textarea id="issueText" placeholder="Describe the machine issue (e.g., 'Klemme Defekt', 'Tor reparatur', 'Papierrolle befestigen')..." required></textarea>
+                    </div>
+                    <div class="row">
+                        <div class="form-group">
+                            <label for="equipment">Equipment Number (optional)</label>
+                            <input type="text" id="equipment" placeholder="e.g., 12002267">
+                        </div>
+                        <div class="form-group">
+                            <label for="funcLocation">Functional Location (optional)</label>
+                            <input type="text" id="funcLocation" placeholder="e.g., 8270-Halle 101">
+                        </div>
+                    </div>
+                    <div class="form-group checkbox-group">
+                        <input type="checkbox" id="includeSynthesis">
+                        <label for="includeSynthesis">Include AI Explanation (adds ~1-2s latency, uses OpenAI API)</label>
+                    </div>
+                    <button type="submit" id="submitBtn">Get Suggestions</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="loading" class="loading">
+            <span class="spinner"></span> Searching historical cases...
+        </div>
+
+        <div id="results" class="hidden">
+            <div id="synthesis" class="synthesis-box hidden">
+                <h4>🤖 AI Summary (verify against cases below)</h4>
+                <p id="synthesisText"></p>
+            </div>
+
+            <div class="card">
+                <div class="card-header"><h3>Suggestions (<span id="suggestionCount">0</span>)</h3></div>
+                <div class="card-body" id="suggestionsContainer"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast"></div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000';
+        const form = document.getElementById('issueForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const loading = document.getElementById('loading');
+        const results = document.getElementById('results');
+        const errorDiv = document.getElementById('error');
+        const suggestionsContainer = document.getElementById('suggestionsContainer');
+        const synthesisBox = document.getElementById('synthesis');
+        const synthesisText = document.getElementById('synthesisText');
+        const suggestionCount = document.getElementById('suggestionCount');
+        const toast = document.getElementById('toast');
+
+        function showError(msg) {
+            errorDiv.textContent = msg;
+            errorDiv.classList.add('visible');
+        }
+        function hideError() { errorDiv.classList.remove('visible'); }
+        function showToast(msg, type = 'success') {
+            toast.textContent = msg;
+            toast.className = 'toast visible ' + (type === 'success' ? 'toast-success' : 'toast-error');
+            setTimeout(() => toast.classList.remove('visible'), 3000);
+        }
+
+        function confidenceClass(conf) {
+            return 'confidence-' + conf;
+        }
+
+        function formatMeta(s) {
+            const parts = [];
+            if (s.equipment) parts.push(`Equipment: ${s.equipment}`);
+            if (s.func_location) parts.push(`Location: ${s.func_location}`);
+            if (s.source_order) parts.push(`Order: ${s.source_order}`);
+            return parts.map(p => `<span>${p}</span>`).join('');
+        }
+
+        function renderSuggestion(s, idx) {
+            const div = document.createElement('div');
+            div.className = 'suggestion';
+            div.innerHTML = `
+                <div class="suggestion-header">
+                    <span class="suggestion-rank">#${s.rank}</span>
+                    <span class="suggestion-confidence ${confidenceClass(s.confidence)}">${s.confidence} (${s.similarity_score.toFixed(2)})</span>
+                </div>
+                <div class="suggestion-meta">${formatMeta(s)}</div>
+                <div class="suggestion-text"><strong>Issue:</strong> <span>${escapeHtml(s.issue_text)}</span></div>
+                <div class="suggestion-text"><strong>Resolution:</strong> <span>${escapeHtml(s.resolution_text || '(no resolution recorded)')}</span></div>
+                <button class="toggle-btn" data-target="content-${idx}">Show feedback options ▼</button>
+                <div class="suggestion-content" id="content-${idx}">
+                    <div class="actions" style="margin-top: 12px; padding-top: 12px; border-top: 1px solid #eee;">
+                        <button class="btn-success" data-action="ACCEPT" data-notif="${s.source_notification}">✓ Accept</button>
+                        <button class="btn-warning" data-action="OVERRIDE" data-notif="${s.source_notification}">✎ Override</button>
+                        <button class="btn-danger" data-action="REJECT" data-notif="${s.source_notification}">✗ Reject</button>
+                    </div>
+                </div>
+            `;
+            return div;
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Toggle feedback options
+        document.addEventListener('click', e => {
+            if (e.target.matches('.toggle-btn')) {
+                const targetId = e.target.dataset.target;
+                const content = document.getElementById(targetId);
+                content.classList.toggle('visible');
+                e.target.textContent = content.classList.contains('visible') 
+                    ? 'Hide feedback options ▲' 
+                    : 'Show feedback options ▼';
+            }
+        });
+
+        // Handle feedback buttons
+        document.addEventListener('click', async e => {
+            if (e.target.matches('[data-action]')) {
+                const action = e.target.dataset.action;
+                const notifId = e.target.dataset.notif;
+                const issueText = document.getElementById('issueText').value;
+                const technicianId = prompt('Enter your SAP Personnel ID:');
+                if (!technicianId) return;
+
+                let overrideText = null;
+                if (action === 'OVERRIDE') {
+                    overrideText = prompt('Enter your custom resolution:');
+                    if (!overrideText) return;
+                }
+
+                try {
+                    const resp = await fetch(`${API_BASE}/feedback`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            query_issue_text: issueText,
+                            suggested_notification_id: notifId,
+                            action,
+                            technician_id: technicianId,
+                            override_text: overrideText
+                        })
+                    });
+                    if (!resp.ok) throw new Error('Feedback failed');
+                    showToast(`Feedback recorded: ${action}`, 'success');
+                } catch (err) {
+                    showToast('Failed to record feedback: ' + err.message, 'error');
+                }
+            }
+        });
+
+        // Form submit
+        form.addEventListener('submit', async e => {
+            e.preventDefault();
+            hideError();
+
+            const issueText = document.getElementById('issueText').value.trim();
+            if (!issueText) { showError('Please enter an issue description'); return; }
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Searching...';
+            loading.classList.add('visible');
+            results.classList.add('hidden');
+            suggestionsContainer.innerHTML = '';
+            synthesisBox.classList.add('hidden');
+
+            try {
+                const resp = await fetch(`${API_BASE}/suggest`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        issue_text: issueText,
+                        equipment: document.getElementById('equipment').value.trim() || null,
+                        func_location: document.getElementById('funcLocation').value.trim() || null,
+                        top_k: 3,
+                        include_synthesis: document.getElementById('includeSynthesis').checked
+                    })
+                });
+
+                if (!resp.ok) {
+                    const err = await resp.json();
+                    throw new Error(err.detail || 'Request failed');
+                }
+
+                const data = await resp.json();
+                suggestionCount.textContent = data.suggestions.length;
+
+                data.suggestions.forEach((s, i) => {
+                    suggestionsContainer.appendChild(renderSuggestion(s, i));
+                });
+
+                if (data.synthesis) {
+                    synthesisText.textContent = data.synthesis;
+                    synthesisBox.classList.remove('hidden');
+                }
+
+                results.classList.remove('hidden');
+            } catch (err) {
+                showError('Error: ' + err.message);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Get Suggestions';
+                loading.classList.remove('visible');
+            }
+        });
+
+        // Health check on load
+        fetch(`${API_BASE}/health`)
+            .then(r => r.json())
+            .then(d => console.log('Backend:', d.backend))
+            .catch(() => showError('Cannot connect to API. Is the server running on port 8000?'));
+    </script>
+</body>
+</html>

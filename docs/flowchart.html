@@ -1,0 +1,43 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>MIRA Use Case Flowchart</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+  <style>body{font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial; padding:20px}</style>
+</head>
+<body>
+  <h2>MIRA Use Case Flowchart</h2>
+  <div class="mermaid">
+flowchart LR
+  A[User (frontend)] -->|POST /suggest| B[FastAPI `services.api`]
+  B --> C[services.config -> clients]
+  B --> D[Retriever `services.retriever`]
+  D --> E[Embedding client (adapter)]
+  E --> F[Vector store (FAISS) adapter]
+  F --> D
+  D -->|top-k suggestions| B
+  B -->|include_synthesis| G[Synthesizer `services.synthesizer`]
+  G --> H[LLM client (adapter)]
+  H --> G
+  G --> B
+  B --> A
+  A -->|user feedback| I[`/feedback`]
+  I --> J[Feedback store adapter (SQLite)]
+  </div>
+
+  <h3>How to export PNG locally</h3>
+  <ol>
+    <li>Open this file in a browser (double-click <code>docs/flowchart.html</code>).</li>
+    <li>Right-click the rendered diagram and choose "Save image as..." or use browser devtools &rarr; "Capture node screenshot".</li>
+    <li>Or generate a PNG via Mermaid CLI (requires Node.js):</li>
+  </ol>
+  <pre><code>npx @mermaid-js/mermaid-cli -i docs/flowchart.mmd -o docs/flowchart.png --width 1200
+# Or install globally:
+# npm i -g @mermaid-js/mermaid-cli
+# mmdc -i docs/flowchart.mmd -o docs/flowchart.png
+</code></pre>
+
+  <p>If you want, I can add the generated PNG to the repo (but I can't run the renderer from here).</p>
+</body>
+</html>

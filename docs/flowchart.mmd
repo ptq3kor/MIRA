@@ -1,0 +1,15 @@
+flowchart LR
+  A[User (frontend)] -->|POST /suggest| B[FastAPI `services.api`]
+  B --> C[services.config -> clients]
+  B --> D[Retriever `services.retriever`]
+  D --> E[Embedding client (adapter)]
+  E --> F[Vector store (FAISS) adapter]
+  F --> D
+  D -->|top-k suggestions| B
+  B -->|include_synthesis| G[Synthesizer `services.synthesizer`]
+  G --> H[LLM client (adapter)]
+  H --> G
+  G --> B
+  B --> A
+  A -->|user feedback| I[`/feedback`]
+  I --> J[Feedback store adapter (SQLite)]

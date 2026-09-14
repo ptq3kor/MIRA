@@ -1,0 +1,29 @@
+{
+  "source_file": "MIRA_PM_Data_Cleaned.xlsx",
+  "total_notifications_in_source": 19063,
+  "site_breakdown": {
+    "2151": {
+      "total_notifications": 3254,
+      "usable": 16,
+      "usable_pct": 0.5,
+      "boilerplate_or_empty_pct": 92.7,
+      "excluded_by_site_decision": true
+    },
+    "8270": {
+      "total_notifications": 15809,
+      "usable": 13746,
+      "usable_pct": 87.0,
+      "boilerplate_or_empty_pct": 12.5,
+      "excluded_by_site_decision": false
+    }
+  },
+  "sites_excluded_by_decision": [
+    "2151"
+  ],
+  "final_corpus_size": 13746,
+  "employee_names_included": false,
+  "known_excluded_fields": [
+    "Equipment issue by Technician (mismatched field per Data_Quality_Fix_Log #7)",
+    "Completion confrmtn (sequential counter, not a flag, per #8)"
+  ]
+}
