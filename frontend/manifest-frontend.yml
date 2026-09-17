@@ -1,0 +1,11 @@
+---
+applications:
+  - name: mira-frontend
+    memory: 128M
+    disk_quota: 256M
+    instances: 1
+    path: frontend
+    buildpack: staticfile_buildpack
+    env:
+      # Set this to the actual backend URL after you push the backend
+      MIRA_API_BASE: "https://mira-api.YOUR_DOMAIN"

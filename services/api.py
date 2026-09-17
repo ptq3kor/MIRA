@@ -12,6 +12,7 @@ Run: uvicorn services.api:app --reload --port 8000
 """
 
 from typing import Optional
+import os
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -32,9 +33,16 @@ _llm_client = None
 _retriever: Optional[Retriever] = None
 
 # Allow frontend app served at localhost:8080 to call this API during local development
+# Configure allowed origins from env (comma-separated) to support deployed frontend
+_allowed = os.getenv("ALLOWED_ORIGINS")
+if _allowed:
+    allow_origins = [o.strip() for o in _allowed.split(",") if o.strip()]
+else:
+    allow_origins = ["http://localhost:8080", "http://127.0.0.1:8080"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:8080", "http://127.0.0.1:8080"],
+    allow_origins=allow_origins,
     allow_credentials=True,
     allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
