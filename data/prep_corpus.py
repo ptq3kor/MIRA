@@ -123,7 +123,7 @@ def records_to_dataframe(records: list[dict]) -> pd.DataFrame:
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--input", default="data/MIRA_PM_Data_Cleaned.xlsx")
+    ap.add_argument("--input", default="data/MIRA_PM_Data_Cleaned_Translated.xlsx")
     ap.add_argument("--out-xlsx", default="data/mira_corpus_reviewed.xlsx")
     ap.add_argument("--out-stats", default="data/corpus_stats.json")
     ap.add_argument("--include-all-sites", action="store_true")

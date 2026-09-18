@@ -139,6 +139,7 @@ node_modules/
 
 # Optional: ignore large data or generated files
 MIRA_PM_Data_Cleaned.xlsx
+data/MIRA_PM_Data_Cleaned_Translated.xlsx
 uv.lock
 
 # Byte-compiled / optimized / DLL files
