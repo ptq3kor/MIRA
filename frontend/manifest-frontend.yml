@@ -4,7 +4,7 @@ applications:
     memory: 128M
     disk_quota: 256M
     instances: 1
-    path: frontend
+    path: .
     buildpack: staticfile_buildpack
     env:
       # Set this to the actual backend URL after you push the backend

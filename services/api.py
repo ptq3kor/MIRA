@@ -12,7 +12,9 @@ Run: uvicorn services.api:app --reload --port 8000
 """
 
 from typing import Optional
+import logging
 import os
+import threading
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -23,9 +25,12 @@ from services.interfaces import FeedbackEvent
 from services.retriever import Retriever
 from services.synthesizer import synthesize
 
+logger = logging.getLogger(__name__)
+
 app = FastAPI(title="MIRA API", version="0.3.0")
 
 # Global singletons initialized at startup
+_index_building = False
 _embedding_client = None
 _vector_store = None
 _feedback_store = None
@@ -52,12 +57,28 @@ app.add_middleware(
 @app.on_event("startup")
 def startup():
     """Initialize all backend clients on application startup."""
-    global _embedding_client, _vector_store, _feedback_store, _llm_client, _retriever
+    global _embedding_client, _vector_store, _feedback_store, _llm_client, _retriever, _index_building
     _embedding_client = config.get_embedding_client()
     _vector_store = config.get_vector_store()
     _feedback_store = config.get_feedback_store()
     _llm_client = config.get_llm_client()  # may be None if MIRA_LLM_BACKEND=none
     _retriever = Retriever(_embedding_client, _vector_store)
+
+    if config.vector_store_index_missing():
+        # Embedding the full corpus can take minutes - do it in the background
+        # rather than blocking startup and failing the platform health check.
+        _index_building = True
+
+        def _build():
+            global _index_building
+            try:
+                config.build_faiss_index(_vector_store)
+            except Exception:
+                logger.exception("Background vector store index build failed")
+            finally:
+                _index_building = False
+
+        threading.Thread(target=_build, daemon=True).start()
 
 
 class SuggestRequest(BaseModel):
@@ -107,7 +128,7 @@ class FeedbackResponse(BaseModel):
 @app.get("/health")
 def health():
     """Health check endpoint with backend configuration info."""
-    return {"status": "ok", "backend": {
+    return {"status": "ok", "index_building": _index_building, "backend": {
         "embedding": config.EMBEDDING_BACKEND,
         "llm": config.LLM_BACKEND,
         "vector_store": config.VECTOR_STORE_BACKEND,
@@ -125,6 +146,9 @@ def suggest(req: SuggestRequest):
     """
     if not req.issue_text.strip():
         raise HTTPException(status_code=400, detail="issue_text must not be empty")
+
+    if _index_building:
+        raise HTTPException(status_code=503, detail="Vector store index is still building, retry shortly")
 
     suggestions = _retriever.retrieve(
         issue_text=req.issue_text,
